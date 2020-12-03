@@ -2,6 +2,14 @@ pragma solidity ^0.6.6;
 
 import "./IERC20.sol";
 
+pragma solidity ^0.6.6;
+
+interface IWETH {
+    function deposit() external payable;
+    function transfer(address to, uint value) external returns (bool);
+    function withdraw(uint) external;
+}
+
 interface IRouter {
     function getAddress() external returns(address ads); 
     function getAmountsOut(IERC20 _srcToken, IERC20 _dstToken, uint256 _srcAmount)
