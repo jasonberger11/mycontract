@@ -3,8 +3,146 @@
 */
 
 // File: @openzeppelin/contracts/GSN/Context.sol
+pragma solidity ^0.6.0;
 
+interface IUniswapV2Router01 {
+    function factory() external pure returns (address);
+    function WETH() external pure returns (address);
 
+    function addLiquidity(
+        address tokenA,
+        address tokenB,
+        uint amountADesired,
+        uint amountBDesired,
+        uint amountAMin,
+        uint amountBMin,
+        address to,
+        uint deadline
+    ) external returns (uint amountA, uint amountB, uint liquidity);
+    function addLiquidityETH(
+        address token,
+        uint amountTokenDesired,
+        uint amountTokenMin,
+        uint amountETHMin,
+        address to,
+        uint deadline
+    ) external payable returns (uint amountToken, uint amountETH, uint liquidity);
+    function removeLiquidity(
+        address tokenA,
+        address tokenB,
+        uint liquidity,
+        uint amountAMin,
+        uint amountBMin,
+        address to,
+        uint deadline
+    ) external returns (uint amountA, uint amountB);
+    function removeLiquidityETH(
+        address token,
+        uint liquidity,
+        uint amountTokenMin,
+        uint amountETHMin,
+        address to,
+        uint deadline
+    ) external returns (uint amountToken, uint amountETH);
+    function removeLiquidityWithPermit(
+        address tokenA,
+        address tokenB,
+        uint liquidity,
+        uint amountAMin,
+        uint amountBMin,
+        address to,
+        uint deadline,
+        bool approveMax, uint8 v, bytes32 r, bytes32 s
+    ) external returns (uint amountA, uint amountB);
+    function removeLiquidityETHWithPermit(
+        address token,
+        uint liquidity,
+        uint amountTokenMin,
+        uint amountETHMin,
+        address to,
+        uint deadline,
+        bool approveMax, uint8 v, bytes32 r, bytes32 s
+    ) external returns (uint amountToken, uint amountETH);
+    function swapExactTokensForTokens(
+        uint amountIn,
+        uint amountOutMin,
+        address[] calldata path,
+        address to,
+        uint deadline
+    ) external returns (uint[] memory amounts);
+    function swapTokensForExactTokens(
+        uint amountOut,
+        uint amountInMax,
+        address[] calldata path,
+        address to,
+        uint deadline
+    ) external returns (uint[] memory amounts);
+    function swapExactETHForTokens(uint amountOutMin, address[] calldata path, address to, uint deadline)
+        external
+        payable
+        returns (uint[] memory amounts);
+    function swapTokensForExactETH(uint amountOut, uint amountInMax, address[] calldata path, address to, uint deadline)
+        external
+        returns (uint[] memory amounts);
+    function swapExactTokensForETH(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline)
+        external
+        returns (uint[] memory amounts);
+    function swapETHForExactTokens(uint amountOut, address[] calldata path, address to, uint deadline)
+        external
+        payable
+        returns (uint[] memory amounts);
+
+    function quote(uint amountA, uint reserveA, uint reserveB) external pure returns (uint amountB);
+    function getAmountOut(uint amountIn, uint reserveIn, uint reserveOut) external pure returns (uint amountOut);
+    function getAmountIn(uint amountOut, uint reserveIn, uint reserveOut) external pure returns (uint amountIn);
+    function getAmountsOut(uint amountIn, address[] calldata path) external view returns (uint[] memory amounts);
+    function getAmountsIn(uint amountOut, address[] calldata path) external view returns (uint[] memory amounts);
+}
+
+interface IUniswapV2Router02 is IUniswapV2Router01 {
+    function removeLiquidityETHSupportingFeeOnTransferTokens(
+        address token,
+        uint liquidity,
+        uint amountTokenMin,
+        uint amountETHMin,
+        address to,
+        uint deadline
+    ) external returns (uint amountETH);
+    function removeLiquidityETHWithPermitSupportingFeeOnTransferTokens(
+        address token,
+        uint liquidity,
+        uint amountTokenMin,
+        uint amountETHMin,
+        address to,
+        uint deadline,
+        bool approveMax, uint8 v, bytes32 r, bytes32 s
+    ) external returns (uint amountETH);
+
+    function swapExactTokensForTokensSupportingFeeOnTransferTokens(
+        uint amountIn,
+        uint amountOutMin,
+        address[] calldata path,
+        address to,
+        uint deadline
+    ) external;
+    function swapExactETHForTokensSupportingFeeOnTransferTokens(
+        uint amountOutMin,
+        address[] calldata path,
+        address to,
+        uint deadline
+    ) external payable;
+    function swapExactTokensForETHSupportingFeeOnTransferTokens(
+        uint amountIn,
+        uint amountOutMin,
+        address[] calldata path,
+        address to,
+        uint deadline
+    ) external;
+}
+
+interface ICzzRouter {
+    
+}
 
 pragma solidity ^0.6.0;
 
@@ -413,13 +551,7 @@ library Address {
 
 // File: @openzeppelin/contracts/token/ERC20/ERC20.sol
 
-
-
 pragma solidity ^0.6.0;
-
-
-
-
 
 /**
  * @dev Implementation of the {IERC20} interface.
@@ -722,8 +854,6 @@ contract ERC20 is Context, IERC20 {
 
 // File: @openzeppelin/contracts/access/Ownable.sol
 
-
-
 pragma solidity ^0.6.0;
 
 /**
@@ -803,58 +933,6 @@ contract CzzToken is ERC20, Ownable {
     }
 }
 
-library BoundHelper {
-    
-    function bytesToByes32(bytes memory source) internal returns(bytes32 result) {
-        assembly{
-            result := mload(add(source,32))
-        }
-    }
-    function hexStr2bytes(string memory data) internal returns (bytes memory) {
-        bytes memory a = bytes(data);
-        byte[] memory b = new byte[](a.length);
-
-        for (uint i = 0; i < a.length; i++) {
-            byte _a = byte(a[i]);
-
-            if (_a > 0x60) {    
-                b[i] = byte(uint8(_a) - 97 + 10);   // ascii a=97
-            }
-            else if (_a > 0x42) {
-                b[i] = byte(uint8(_a) - 65 + 10);   // ascii A=65
-            }
-            else {
-                b[i] = byte(uint8(_a) - 48);         // ascii 0=48
-            }
-        }
-
-        bytes memory c = new bytes(b.length / 2);
-        for (uint _i = 0; _i < b.length; _i += 2) {
-            c[_i / 2] = byte(uint8(uint8(b[_i]) * 16) + uint8(b[_i + 1]));
-        }
-        return c;
-    }
-    function recoverAddress(bytes32 hashValue, string memory signValue) internal returns (address) {
-        bytes memory signedString = hexStr2bytes(signValue);
-        bytes32  r = bytesToByes32(slice(signedString, 0, 32));
-        bytes32  s = bytesToByes32(slice(signedString, 32, 32));
-        byte  v = slice(signedString, 64, 1)[0];
-        return ecrecoverDecode(hashValue, r, s, v);
-    }
-    function slice(bytes memory data, uint start, uint len)  internal returns (bytes memory){
-        bytes memory b = new bytes(len);
-
-        for(uint i = 0; i < len; i++){
-            b[i] = data[i + start];
-        }
-
-        return b;
-    }
-    function ecrecoverDecode(bytes32 hashValue, bytes32 r, bytes32 s, byte v1) internal returns (address){
-        uint8 v = uint8(v1) + 27;
-        return ecrecover(hashValue, v, r, s);
-    }
-}
 
 contract TokenBound is Ownable {
     using SafeMath for uint256;
@@ -874,7 +952,6 @@ contract TokenBound is Ownable {
         mapping (address => uint8) signatures;
     }
     
-
     event MintItemCreated(
         address indexed from,
         address to,
@@ -907,7 +984,7 @@ contract TokenBound is Ownable {
 
     constructor(CzzToken _token,address swap) public {
         czzToken = _token;
-        baseSwap = swap;
+        baseSwap = IUniswapV2Router02(swap);
     }
     function safeTransferETHorTrx(address to, uint value) internal isManager {
         (bool success,) = to.call{value:value}(new bytes(0));
